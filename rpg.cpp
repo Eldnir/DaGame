@@ -308,7 +308,7 @@ choix_action:
         SetConsoleTextAttribute(hConsole, 10);
         cout << "Victoire !" << endl;
         SetConsoleTextAttribute(hConsole, 14);
-        cout << "vous gagnez" << adversaire.Gold_weight * nb_recommencer << "pieces d'or !" << endl
+        cout << "vous gagnez " << adversaire.Gold_weight * nb_recommencer << " pieces d'or !" << endl
              << endl
              << endl;
         joueur.Gold += adversaire.Gold_weight * nb_recommencer;
