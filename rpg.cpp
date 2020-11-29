@@ -64,6 +64,9 @@ struct Ennemi
 void init();
 void tour_de_jeu();
 void magasin();
+void affichage_combat(Player joueur, Ennemi adversaire, int tours_consecutifs, int tour);
+void affichage_arrivee_ennemi(Ennemi adversaire);
+Ennemi create_adversaire(Player joueur);
 
 int main()
 {
@@ -147,81 +150,14 @@ void tour_de_jeu()
 nouveau_combat:
     int tour(1);
     int action(0);
-    Ennemi adversaire; //creation d'un monstre aléatoire entre trois types de monstres
-    // a moduler, j'ai tout regroupé dans la fonction pour debug mais faut redecouper ça
-    srand((unsigned int)time(0));
-    int type_ennemi = rand() % 3 + 1;
-    if (type_ennemi == 1)
-    {
-        adversaire.Niveau = joueur.Niveau; // a améliorer pour ajouter un peu de random à ça
-        adversaire.Nom = "Gobelin";
-        adversaire.Sorts = {attaque_basique_ennemi, attaque_speciale_gobelin};
-        adversaire.HP = 20;
-        adversaire.Gold_weight = 2;
-    }
+    Ennemi adversaire;
+    
+    adversaire = create_adversaire(joueur);
 
-    else if (type_ennemi == 2)
-    {
-        adversaire.Niveau = joueur.Niveau; // a améliorer pour ajouter un peu de random à ça
-        adversaire.Nom = "Voleur";
-        adversaire.Sorts = {attaque_basique_ennemi, attaque_speciale_voleur};
-        adversaire.HP = 20;
-        adversaire.Gold_weight = 3;
-    }
-    else if (type_ennemi == 3)
-    {
-        adversaire.Niveau = joueur.Niveau; // a améliorer pour ajouter un peu de random à ça
-        adversaire.Nom = "Geant";
-        adversaire.Sorts = {attaque_basique_ennemi};
-        adversaire.HP = 40;
-        adversaire.Gold_weight = 4;
-    }
-
-    Sleep(1000);
-    SetConsoleTextAttribute(hConsole, 12);
-    cout << "un ennemi approche !   ...." << endl;
-    Sleep(1000);
-    SetConsoleTextAttribute(hConsole, 15);
-    cout << "c'est un ";
-    SetConsoleTextAttribute(hConsole, 5);
-    cout << adversaire.Nom;
-    SetConsoleTextAttribute(hConsole, 15);
-    cout << " de niveau ";
-    SetConsoleTextAttribute(hConsole, 12);
-    cout << adversaire.Niveau;
-    SetConsoleTextAttribute(hConsole, 15);
-    cout << " ! " << endl
-         << endl;
-    Sleep(1000);
+    affichage_arrivee_ennemi(adversaire);
 
 debut_tour:
-    //affichage du combat
-    SetConsoleTextAttribute(hConsole, 3);
-    cout << "----------------------";
-    SetConsoleTextAttribute(hConsole, 1);
-    cout << "Combat ";
-    cout << tours_consecutifs << ", ";
-
-    cout << "tour" << tour;
-    SetConsoleTextAttribute(hConsole, 3);
-    cout << "----------------------" << endl;
-    cout << "vos stats :  Niveau  : " << joueur.Niveau << endl;
-    SetConsoleTextAttribute(hConsole, 12);
-    cout << "             HP : " << joueur.HP << "/" << joueur.HP_max << endl;
-    SetConsoleTextAttribute(hConsole, 1);
-    cout << "             Mana : " << joueur.Mana << "/" << joueur.Mana_max << endl;
-    SetConsoleTextAttribute(hConsole, 12);
-    cout << "             Potions restantes : " << joueur.Potions << endl;
-    SetConsoleTextAttribute(hConsole, 14);
-    cout << "             Po : " << joueur.Gold << endl;
-    SetConsoleTextAttribute(hConsole, 15);
-    cout << "ennemi : " << adversaire.Nom << endl;
-    cout << "             Niveau :  " << adversaire.Niveau << endl;
-    SetConsoleTextAttribute(hConsole, 12);
-    cout << "             HP : " << adversaire.HP << endl;
-    SetConsoleTextAttribute(hConsole, 15);
-    cout << endl
-         << endl;
+    affichage_combat(joueur, adversaire, tours_consecutifs, tour);
 
 choix_action:
     cout << "que faire ?" << endl;
@@ -427,5 +363,92 @@ debut_shop:
     else
     {
         return;
+    }
+}
+
+void affichage_combat(Player joueur, Ennemi adversaire, int tours_consecutifs, int tour)
+
+{
+    SetConsoleTextAttribute(hConsole, 3);
+    cout << "----------------------";
+    SetConsoleTextAttribute(hConsole, 1);
+    cout << "Combat ";
+    cout << tours_consecutifs << ", ";
+
+    cout << "Tour" << tour;
+    SetConsoleTextAttribute(hConsole, 3);
+    cout << "----------------------" << endl;
+    cout << "vos stats :  Niveau  : " << joueur.Niveau << endl;
+    SetConsoleTextAttribute(hConsole, 12);
+    cout << "             HP : " << joueur.HP << "/" << joueur.HP_max << endl;
+    SetConsoleTextAttribute(hConsole, 1);
+    cout << "             Mana : " << joueur.Mana << "/" << joueur.Mana_max << endl;
+    SetConsoleTextAttribute(hConsole, 12);
+    cout << "             Potions restantes : " << joueur.Potions << endl;
+    SetConsoleTextAttribute(hConsole, 14);
+    cout << "             Po : " << joueur.Gold << endl;
+    SetConsoleTextAttribute(hConsole, 15);
+    cout << "ennemi : " << adversaire.Nom << endl;
+    cout << "             Niveau :  " << adversaire.Niveau << endl;
+    SetConsoleTextAttribute(hConsole, 12);
+    cout << "             HP : " << adversaire.HP << endl;
+    SetConsoleTextAttribute(hConsole, 15);
+    cout << endl
+         << endl;
+    return;
+}
+
+void affichage_arrivee_ennemi(Ennemi adversaire)
+{
+    Sleep(1000);
+    SetConsoleTextAttribute(hConsole, 12);
+    cout << "un ennemi approche !   ...." << endl;
+    Sleep(1000);
+    SetConsoleTextAttribute(hConsole, 15);
+    cout << "c'est un ";
+    SetConsoleTextAttribute(hConsole, 5);
+    cout << adversaire.Nom;
+    SetConsoleTextAttribute(hConsole, 15);
+    cout << " de niveau ";
+    SetConsoleTextAttribute(hConsole, 12);
+    cout << adversaire.Niveau;
+    SetConsoleTextAttribute(hConsole, 15);
+    cout << " ! " << endl
+         << endl;
+    Sleep(1000);
+}
+
+Ennemi create_adversaire(Player joueur)
+{
+    Ennemi adversaire;
+    srand((unsigned int)time(0));
+    int type_ennemi = rand() % 3 + 1;
+    if (type_ennemi == 1)
+    {
+        adversaire.Niveau = joueur.Niveau; // a améliorer pour ajouter un peu de random à ça
+        adversaire.Nom = "Gobelin";
+        adversaire.Sorts = {attaque_basique_ennemi, attaque_speciale_gobelin};
+        adversaire.HP = 20;
+        adversaire.Gold_weight = 2;
+        return adversaire;
+    }
+
+    else if (type_ennemi == 2)
+    {
+        adversaire.Niveau = joueur.Niveau; // a améliorer pour ajouter un peu de random à ça
+        adversaire.Nom = "Voleur";
+        adversaire.Sorts = {attaque_basique_ennemi, attaque_speciale_voleur};
+        adversaire.HP = 20;
+        adversaire.Gold_weight = 3;
+        return adversaire;
+    }
+    else if (type_ennemi == 3)
+    {
+        adversaire.Niveau = joueur.Niveau; // a améliorer pour ajouter un peu de random à ça
+        adversaire.Nom = "Geant";
+        adversaire.Sorts = {attaque_basique_ennemi};
+        adversaire.HP = 40;
+        adversaire.Gold_weight = 4;
+        return adversaire;
     }
 }
