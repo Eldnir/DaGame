@@ -35,6 +35,8 @@ struct Player
     int HP_max;
     int Potions;
     int Gold;
+    int Degats;
+    int Defense;
     //ajouter des stats si besoin
 };
 
@@ -47,8 +49,9 @@ Sort boule_de_feu{"tornade de feu", 15, 5};
 Sort fleche_perforante{"fleche_perforante", 10, 1};
 Sort charge{"charge", 10, 1};
 Sort attaque_basique_ennemi{"boum", 4, 0};
-Sort attaque_speciale_gobelin{"boum", 4, 1};
-Sort attaque_speciale_voleur{"boum", 4, 1};
+Sort attaque_speciale_gobelin{"fourberie", 6, 0};
+Sort attaque_speciale_voleur{"lancer de couteau", 8, 0};
+Sort attaque_speciale_geant{"TAPER", 5, 0};
 
 struct Ennemi
 {
@@ -58,15 +61,39 @@ struct Ennemi
     int HP;
     int HP_max;
     int Gold_weight;
+    int Degats;
+    int Defense;
 };
+
+class Item
+{
+public:
+    string Nom;
+    string Effet;
+    int Cout;
+    int Color; //permet de l'afficher de la bonne couleur.  2 pour vert(commun), 11 (rare), 13 (epique)
+
+    /*
+    void Application_effet(Player &joueur);
+    */
+};
+
+//tous les items du jeu
+Item potion_de_soin{"Potion de soin", "+1 potion", 4, 15};
+Item upgrade_basic_attack{"Amelioration de la competence de base", "+5", 5, 2};
+Item upgrade_special_attack{"Amelioration de la competence speciale", "+5", 6, 2};
+Item epee_longue{"Epee longue", "+4 degats", 8, 11};
+vector<Item> objets_shop{potion_de_soin, upgrade_basic_attack, upgrade_special_attack};
 
 //prototypes
 void init();
 void tour_de_jeu();
-void magasin();
+void shop(Player joueur);
 void affichage_combat(Player joueur, Ennemi adversaire, int tours_consecutifs, int tour);
 void affichage_arrivee_ennemi(Ennemi adversaire);
 Ennemi create_adversaire(Player joueur);
+int manage_degats_joueur(Player joueur, Ennemi adversaire, Sort sort_utilise);
+int manage_degats_ennemi(Ennemi adversaire, Player joueur, Sort sort_utilise);
 
 int main()
 {
@@ -100,6 +127,8 @@ demander_classe:
         joueur.HP = joueur.HP_max;
         joueur.Potions = 2;
         joueur.Gold = 0;
+        joueur.Degats = 1;
+        joueur.Defense = 5;
     }
     else if (joueur.Classe == "Mage")
     {
@@ -110,16 +139,20 @@ demander_classe:
         joueur.HP = joueur.HP_max;
         joueur.Potions = 2;
         joueur.Gold = 0;
+        joueur.Degats = 2;
+        joueur.Defense = 2;
     }
     else if (joueur.Classe == "Archer")
     {
         joueur.Sorts = {attaque_basique_archer, fleche_perforante};
         joueur.Mana_max = 4;
         joueur.Mana = joueur.Mana_max;
-        joueur.HP_max = 30;
+        joueur.HP_max = 25;
         joueur.HP = joueur.HP_max;
         joueur.Potions = 2;
         joueur.Gold = 0;
+        joueur.Degats = 2;
+        joueur.Defense = 3;
     }
     else
     {
@@ -151,7 +184,7 @@ nouveau_combat:
     int tour(1);
     int action(0);
     Ennemi adversaire;
-    
+
     adversaire = create_adversaire(joueur);
 
     affichage_arrivee_ennemi(adversaire);
@@ -172,15 +205,15 @@ choix_action:
     cin >> action;
     if (action == 1)
     {
-        cout << "joli coup ! l'adversaire perd " << joueur.Sorts[0].Degats << " HP" << endl;
-        adversaire.HP -= joueur.Sorts[0].Degats;
+        cout << "joli coup ! l'adversaire perd " << manage_degats_joueur(joueur, adversaire, joueur.Sorts[0]) << " HP" << endl;
+        adversaire.HP -= manage_degats_joueur(joueur, adversaire, joueur.Sorts[0]);
     }
     else if (action == 2)
     {
         if ((joueur.Mana - joueur.Sorts[1].Cout) >= 0)
         {
-            cout << "vous lancez " << joueur.Sorts[1].nom << " , et infligez " << joueur.Sorts[1].Degats << " points de degats a l'ennemi" << endl;
-            adversaire.HP -= joueur.Sorts[1].Degats;
+            cout << "vous lancez " << joueur.Sorts[1].nom << " , et infligez " << manage_degats_joueur(joueur, adversaire, joueur.Sorts[1]) << " points de degats a l'ennemi" << endl;
+            adversaire.HP -= manage_degats_joueur(joueur, adversaire, joueur.Sorts[1]);
             joueur.Mana -= joueur.Sorts[1].Cout;
         }
         else
@@ -210,7 +243,7 @@ choix_action:
     else
     {
         srand((unsigned int)time(0));
-        int ennemi_action = rand() % 3 + 1;
+        int ennemi_action = rand() % 4 + 1;
         // pour l'instant, deux valeurs pour hit un coup simple, et une valeur de miss
         cout << "le " << adversaire.Nom << " tente une attaque ..." << endl;
         Sleep(1000);
@@ -218,11 +251,18 @@ choix_action:
         if (ennemi_action == 1 || ennemi_action == 2)
         {
             SetConsoleTextAttribute(hConsole, 12);
-            cout << "Attaque reussie ! Il vous attaque et vous inflige " << adversaire.Sorts[0].Degats << " points de degats !" << endl;
-            joueur.HP -= adversaire.Sorts[0].Degats;
+            cout << "Attaque reussie ! Il vous attaque et vous inflige " << manage_degats_ennemi(adversaire, joueur, adversaire.Sorts[0]) << " points de degats !" << endl;
+            joueur.HP -= manage_degats_ennemi(adversaire, joueur, adversaire.Sorts[0]);
             SetConsoleTextAttribute(hConsole, 15);
         }
         else if (ennemi_action == 3)
+        {
+            SetConsoleTextAttribute(hConsole, 12);
+            cout << "Succes critique ! Il utilise la competence " << adversaire.Sorts[1].nom << " et vous inflige " << manage_degats_ennemi(adversaire, joueur, adversaire.Sorts[1]) << " points de degats !" << endl;
+            joueur.HP -= manage_degats_ennemi(adversaire, joueur, adversaire.Sorts[1]);
+            SetConsoleTextAttribute(hConsole, 15);
+        }
+        else if (ennemi_action == 4)
         {
             SetConsoleTextAttribute(hConsole, 2);
             cout << "rate !" << endl;
@@ -268,7 +308,7 @@ choix_action:
             }
             else
             {
-                magasin();
+                shop(joueur);
                 system("CLS");
                 goto nouveau_combat;
             }
@@ -288,63 +328,58 @@ choix_action:
     }
 }
 
-void magasin()
+void shop(Player joueur)
 {
     system("CLS");
     SetConsoleTextAttribute(hConsole, 11);
     cout << "Bienvenue, aventurier." << endl;
     Sleep(1000);
 debut_shop:
-    cout << "que souhaitez-vous acheter ?" << endl;
-    SetConsoleTextAttribute(hConsole, 2); // rouge
-    cout << endl;
-    cout << "1- potion de soin";
-    SetConsoleTextAttribute(hConsole, 14); // doré
-    cout << " (4 po) " << endl;
-    SetConsoleTextAttribute(hConsole, 2); // violet
-    cout << "2- amelioration de l'attaque de base";
-    cout << " (+2) ";
-    SetConsoleTextAttribute(hConsole, 14); // doré
-    cout << " (5 po)" << endl;
-    SetConsoleTextAttribute(hConsole, 2);
-    cout << "3- amelioration de l'attaque speciale";
-    cout << " (+5)  ";
-    SetConsoleTextAttribute(hConsole, 14); // doré
-    cout << " (5 po)" << endl;
-    SetConsoleTextAttribute(hConsole, 5);
-    cout << "4- Epee de la mort qui tue";
-    cout << " (+100 degats) ";
     SetConsoleTextAttribute(hConsole, 14);
-    cout << " (100 po)" << endl;
-    SetConsoleTextAttribute(hConsole, 15);
-    cout << "5- rien" << endl
-         << endl;
+    cout << "                                                   po : " << joueur.Gold << endl;
+    SetConsoleTextAttribute(hConsole, 11);
+    cout << "que souhaitez-vous acheter ?" << endl;
+    cout << endl;
+
+    for (size_t i(0); i < objets_shop.size(); i++)
+    {
+        SetConsoleTextAttribute(hConsole, 15);
+
+        cout << i + 1 << " : ";
+        SetConsoleTextAttribute(hConsole, objets_shop[i].Color);
+        cout << objets_shop[i].Nom;
+        SetConsoleTextAttribute(hConsole, 15);
+        cout << " (effet : " << objets_shop[i].Effet << ") ";
+        SetConsoleTextAttribute(hConsole, 14);
+        cout << "cout : " << objets_shop[i].Cout << " po" << endl;
+    }
+    cout << objets_shop.size() + 1 << " : rien" << endl;
     //ajouter systeme de lock item au shop
     //ajouer items
     int achat(0);
     cin >> achat;
-    if (achat == 1) // peut être changer ça pour un switch
+
+    if (achat == objets_shop.size() + 1)
     {
-        joueur.Gold -= 4;
-        joueur.Potions += 1;
-    }
-    else if (achat == 2)
-    {
-        joueur.Gold -= 5;
-        joueur.Sorts[0].Degats += 2;
-    }
-    else if (achat == 3)
-    {
-        joueur.Gold -= 5;
-        joueur.Sorts[1].Degats += 5;
-    }
-    else if (achat == 4)
-    {
-        // entrer stats pour item
-    }
-    else if (achat == 5) //la valeur de sortie
-    {
+        SetConsoleTextAttribute(hConsole, 11);
+        cout << "Au revoir" << endl;
+        Sleep(2000);
         return;
+    }
+    if (joueur.Gold - objets_shop[achat - 1].Cout >= 0)
+    {
+        cout << "*application des effets*" << endl;
+        /*
+        la ce serait un truc comme ça du coup
+        objets_shop[achat - 1].Application_effet(joueur);
+        */
+    }
+    else
+    {
+        SetConsoleTextAttribute(hConsole, 11);
+        cout << "pas assez de pièces d'or" << endl;
+        Sleep(1000);
+        goto debut_shop;
     }
 
     SetConsoleTextAttribute(hConsole, 11);
@@ -352,7 +387,7 @@ debut_shop:
          << endl;
     SetConsoleTextAttribute(hConsole, 15);
     cout << "1 - Oui" << endl;
-    cout << "2 - Au revoir" << endl;
+    cout << "2 - Non" << endl;
 
     int autre_chose(0);
     cin >> autre_chose;
@@ -362,6 +397,9 @@ debut_shop:
     }
     else
     {
+        SetConsoleTextAttribute(hConsole, 11);
+        cout << "Au revoir" << endl;
+        Sleep(2000);
         return;
     }
 }
@@ -430,6 +468,8 @@ Ennemi create_adversaire(Player joueur)
         adversaire.Sorts = {attaque_basique_ennemi, attaque_speciale_gobelin};
         adversaire.HP = 20;
         adversaire.Gold_weight = 2;
+        adversaire.Defense = 2;
+        adversaire.Degats = 3;
         return adversaire;
     }
 
@@ -438,17 +478,50 @@ Ennemi create_adversaire(Player joueur)
         adversaire.Niveau = joueur.Niveau; // a améliorer pour ajouter un peu de random à ça
         adversaire.Nom = "Voleur";
         adversaire.Sorts = {attaque_basique_ennemi, attaque_speciale_voleur};
-        adversaire.HP = 20;
+        adversaire.HP = 30;
         adversaire.Gold_weight = 3;
+        adversaire.Defense = 3;
+        adversaire.Degats = 4;
+
         return adversaire;
     }
     else if (type_ennemi == 3)
     {
         adversaire.Niveau = joueur.Niveau; // a améliorer pour ajouter un peu de random à ça
         adversaire.Nom = "Geant";
-        adversaire.Sorts = {attaque_basique_ennemi};
+        adversaire.Sorts = {attaque_basique_ennemi, attaque_speciale_geant};
         adversaire.HP = 40;
         adversaire.Gold_weight = 4;
+        adversaire.Defense = 3;
+        adversaire.Degats = 2;
         return adversaire;
     }
+}
+
+int manage_degats_joueur(Player joueur, Ennemi adversaire, Sort sort_utilise)
+{
+    /* 
+juste une idée comme ça, a voir si c'est equilibré
+pour l'instant, ce que ca fait c'est que les degats sont calculés de la facon suivante :
+degats aléatoires du sort entre 1 et la stat de degats du sort
+a ça on ajoute 2* le niveau du joueur
+a ça on ajoute les degats du joueur
+et on soustrait par la défense de l'adversaire/2
+*/
+    srand((unsigned int)time(0));
+    int degats = rand() % sort_utilise.Degats + 1; // changer pour que ça fasse un nombre aléatoire entre degats min sort et degat max sort peut etre ?
+    degats = degats + (2 * joueur.Niveau);
+    degats = degats + (joueur.Degats);
+    degats = degats - (adversaire.Defense / 2);
+    return degats;
+}
+int manage_degats_ennemi(Ennemi adversaire, Player joueur, Sort sort_utilise)
+
+{
+    srand((unsigned int)time(0));
+    int degats = rand() % sort_utilise.Degats + 1; // changer pour que ça fasse un nombre aléatoire entre degats min sort et degat max sort peut etre ?
+    degats = degats + (2 * adversaire.Niveau);
+    degats = degats + (adversaire.Degats);
+    degats = degats - (joueur.Defense / 2);
+    return degats;
 }
