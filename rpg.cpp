@@ -80,8 +80,9 @@ public:
 Item potion_de_soin{"Potion de soin", "+1 potion", 4, 15};
 Item upgrade_basic_attack{"Amelioration de la competence de base", "+5", 5, 2};
 Item upgrade_special_attack{"Amelioration de la competence speciale", "+5", 6, 2};
-Item epee_longue{"Epee longue", "+4 degats", 8, 11};
+Item epee_longue{"Epee longue", "+5 degats", 8, 11};
 Item death_dance{"Death Dance", "+20 degats", 20, 13};
+
 vector<Item> objets_shop{potion_de_soin, upgrade_basic_attack, upgrade_special_attack, epee_longue, death_dance};
 
 //prototypes
@@ -93,6 +94,7 @@ void affichage_arrivee_ennemi(Ennemi adversaire);
 Ennemi create_adversaire(Player joueur);
 int manage_degats_joueur(Player joueur, Ennemi adversaire, Sort sort_utilise);
 int manage_degats_ennemi(Ennemi adversaire, Player joueur, Sort sort_utilise);
+Player effet_objet(Player joeuur, int achat);
 
 int main()
 {
@@ -352,6 +354,8 @@ debut_shop:
         SetConsoleTextAttribute(hConsole, 14);
         cout << "cout : " << objets_shop[i].Cout << " po" << endl;
     }
+
+    SetConsoleTextAttribute(hConsole, 15);
     cout << objets_shop.size() + 1 << " : rien" << endl;
     //ajouter systeme de lock item au shop
     //ajouer items
@@ -367,9 +371,10 @@ debut_shop:
     }
     if (joueur.Gold - objets_shop[achat - 1].Cout >= 0)
     {
-        joueur.Gold-=objets_shop[achat-1].Cout;
-        cout << "*application des effets*" << endl;
+        joueur.Gold -= objets_shop[achat - 1].Cout;
 
+        effet_objet(joueur, achat);
+        cout << endl;
         /*
         objets_shop[achat - 1].Application_effet(joueur);
         */
@@ -378,7 +383,7 @@ debut_shop:
     else
     {
         SetConsoleTextAttribute(hConsole, 11);
-        cout << "pas assez de pièces d'or" << endl;
+        cout << "pas assez de pieces d'or" << endl;
         Sleep(1000);
         goto debut_shop;
     }
@@ -403,6 +408,47 @@ debut_shop:
         Sleep(2000);
         return;
     }
+}
+
+Player effet_objet(Player joueur, int achat)
+{
+    if (achat == 1)
+    {
+        joueur.Potions += 1;
+        SetConsoleTextAttribute(hConsole, 11);
+        cout << endl;
+        cout << "Une potion ajoutee." << endl;
+    }
+    else if (achat == 2)
+    {
+        joueur.Sorts[0].Degats += 5;
+        SetConsoleTextAttribute(hConsole, 11);
+        cout << endl;
+        cout << "Les degats de votre attaque de base ont ete augmentes de 5 !" << endl;
+    }
+    else if (achat == 3)
+    {
+        joueur.Sorts[1].Degats += 5;
+        SetConsoleTextAttribute(hConsole, 11);
+        cout << endl;
+        cout << "Les degats de votre attaque speciale ont ete augmentes de 5 !" << endl;
+    }
+    else if (achat == 4)
+    {
+        joueur.Degats += 5;
+        SetConsoleTextAttribute(hConsole, 11);
+        cout << endl;
+        cout << "Vos degats ont ete augmentes de 5 !" << endl;
+    }
+    else if (achat == 5)
+    {
+        joueur.Degats += 20;
+        SetConsoleTextAttribute(hConsole, 11);
+        cout << endl;
+        cout << "Vos degats ont ete augmentes de 20 !" << endl;
+    }
+
+    return joueur;
 }
 
 void affichage_combat(Player joueur, Ennemi adversaire, int tours_consecutifs, int tour)
@@ -509,11 +555,16 @@ a ça on ajoute 2* le niveau du joueur
 a ça on ajoute les degats du joueur
 et on soustrait par la défense de l'adversaire/2
 */
+
     srand((unsigned int)time(0));
     int degats = rand() % sort_utilise.Degats + 1; // changer pour que ça fasse un nombre aléatoire entre degats min sort et degat max sort peut etre ?
     degats = degats + (2 * joueur.Niveau);
     degats = degats + (joueur.Degats);
     degats = degats - (adversaire.Defense / 2);
+    if (degats < sort_utilise.Degats)
+    {
+        degats = sort_utilise.Degats;
+    }
     return degats;
 }
 int manage_degats_ennemi(Ennemi adversaire, Player joueur, Sort sort_utilise)
@@ -524,5 +575,9 @@ int manage_degats_ennemi(Ennemi adversaire, Player joueur, Sort sort_utilise)
     degats = degats + (2 * adversaire.Niveau);
     degats = degats + (adversaire.Degats);
     degats = degats - (joueur.Defense / 2);
+    if (degats < sort_utilise.Degats)
+    {
+        degats = sort_utilise.Degats;
+    }
     return degats;
 }
