@@ -42,11 +42,11 @@ struct Player
 
 Player joueur;
 
-Sort attaque_basique_guerrier{"coup d'epee", 8, 0};
+Sort attaque_basique_guerrier{"coup d'epee", 12, 0};
 Sort attaque_basique_mage{"boule de feu basique", 100, 0}; // MODIFIER LES DEGATS, J'AI MIS 100 POUR TEST PLUS VITE
-Sort attaque_basique_archer{"tirer une fleche", 7, 0};
-Sort boule_de_feu{"tornade de feu", 15, 5};
-Sort fleche_perforante{"fleche_perforante", 10, 1};
+Sort attaque_basique_archer{"tirer une fleche", 10, 0};
+Sort boule_de_feu{"tornade de feu", 20, 5};
+Sort fleche_perforante{"fleche_perforante", 15, 1};
 Sort charge{"charge", 10, 1};
 Sort attaque_basique_ennemi{"boum", 4, 0};
 Sort attaque_speciale_gobelin{"fourberie", 6, 0};
@@ -73,9 +73,7 @@ public:
     int Cout;
     int Color; //permet de l'afficher de la bonne couleur.  2 pour vert(commun), 11 (rare), 13 (epique)
 
-    /*
-    void Application_effet(Player &joueur);
-    */
+    //void Application_effet(Player &joueur);
 };
 
 //tous les items du jeu
@@ -83,7 +81,8 @@ Item potion_de_soin{"Potion de soin", "+1 potion", 4, 15};
 Item upgrade_basic_attack{"Amelioration de la competence de base", "+5", 5, 2};
 Item upgrade_special_attack{"Amelioration de la competence speciale", "+5", 6, 2};
 Item epee_longue{"Epee longue", "+4 degats", 8, 11};
-vector<Item> objets_shop{potion_de_soin, upgrade_basic_attack, upgrade_special_attack};
+Item death_dance{"Death Dance", "+20 degats", 20, 13};
+vector<Item> objets_shop{potion_de_soin, upgrade_basic_attack, upgrade_special_attack, epee_longue, death_dance};
 
 //prototypes
 void init();
@@ -335,11 +334,11 @@ void shop(Player joueur)
     cout << "Bienvenue, aventurier." << endl;
     Sleep(1000);
 debut_shop:
-    SetConsoleTextAttribute(hConsole, 14);
-    cout << "                                                   po : " << joueur.Gold << endl;
     SetConsoleTextAttribute(hConsole, 11);
     cout << "que souhaitez-vous acheter ?" << endl;
     cout << endl;
+    SetConsoleTextAttribute(hConsole, 14);
+    cout << "                                                   po : " << joueur.Gold << endl;
 
     for (size_t i(0); i < objets_shop.size(); i++)
     {
@@ -368,12 +367,14 @@ debut_shop:
     }
     if (joueur.Gold - objets_shop[achat - 1].Cout >= 0)
     {
+        joueur.Gold-=objets_shop[achat-1].Cout;
         cout << "*application des effets*" << endl;
+
         /*
-        la ce serait un truc comme ça du coup
         objets_shop[achat - 1].Application_effet(joueur);
         */
     }
+
     else
     {
         SetConsoleTextAttribute(hConsole, 11);
